@@ -13,8 +13,6 @@ on:
   push:
     paths:
       - src/**
-    paths-ignore:
-      - '.github/**'
     branches: [ "main" ]
     # Publish semver tags as releases.
     tags: [ 'v*.*.*' ]
