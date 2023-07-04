@@ -39,7 +39,7 @@ env:
   CONTAINER_NAME: "sayedimac/docker"
   RESOURCE_GROUP: "400"
   CLUSTER_NAME: "jaz400"
-  DEPLOYMENT_MANIFEST_PATH: "/deployment.yml"
+  DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
 
 jobs:
   buildImage:
