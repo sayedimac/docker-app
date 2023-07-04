@@ -1,0 +1,57 @@
+name: aks
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: "jaz400"
+  CONTAINER_NAME: "sayedimac/docker"
+  RESOURCE_GROUP: "400"
+  CLUSTER_NAME: "jaz400"
+  DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code 
+        uses: actions/checkout@v3
+      - name: ACR build
+        id: build-push-acr
+        uses: azure/acr-build@v1
+        with:
+          creds: ${{ secrets.CREDS }}
+#          service_principal: ${{ secrets.service_principal }}
+#          service_principal_password: ${{ secrets.service_principal_password }}
+#          tenant: ${{ secrets.tenant }}
+          registry: ${{ env.CONTAINER_NAME }}
+          repository: ${{ env.env.AZURE_CONTAINER_REGISTRY }}
+          image:  ${{ env.CONTAINER_NAME }}
+          folder: src
+          branch: master
+          tag: latest
+      - name: Azure login
+        id: login
+        uses: azure/login@v1.4.3
+        with:
+          creds: ${{ secrets.CREDS }}
+      - name: Set AKS context
+        id: set-context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: '${{ env.RESOURCE_GROUP }}' 
+          cluster-name: '${{ env.CLUSTER_NAME }}'
+      - name: Setup kubectl
+        id: install-kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Deploy to AKS
+        id: deploy-aks
+        uses: Azure/k8s-deploy@v4
+        with:
+          namespace: 'default'
+          manifests: |
+             deployment.yml
+          images: '${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}/docker:latest'
+          pull-images: false 
