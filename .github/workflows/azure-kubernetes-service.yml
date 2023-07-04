@@ -35,7 +35,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_CONTAINER_REGISTRY: "jaz400.azurecr.io"
+  AZURE_CONTAINER_REGISTRY: "jaz400"
   CONTAINER_NAME: "sayedimac/docker"
   RESOURCE_GROUP: "400"
   CLUSTER_NAME: "jaz400"
