@@ -31,8 +31,15 @@ name: Build and deploy an app to AKS
 
 on:
   push:
-    branches: ["main"]
+    paths:
+      - src/**
+    branches: [ "main" ]
+    # Publish semver tags as releases.
+    tags: [ 'v*.*.*' ]
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
+
 
 env:
   AZURE_CONTAINER_REGISTRY: "jaz400"
