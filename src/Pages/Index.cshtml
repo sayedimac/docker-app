@@ -4,11 +4,15 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<div class="text-center" style="background-color: @Conf["colour"];">
+    <h1 class="display-4">Welcome the @Conf["site"] site</h1>
+    <dl class="text-left">
+        <dt class="lefty">DB connection string</dt>
+        <dd class="lefty">@Conf["dbconn"]</dd>
 
-hahahaha
+        <dt class="lefty">Auth URL string</dt>
+        <dd class="lefty">@Conf["auth"]</dd>
+    </dl>
+
 
 
