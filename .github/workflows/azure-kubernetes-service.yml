@@ -36,7 +36,7 @@ on:
 
 env:
   AZURE_CONTAINER_REGISTRY: "jaz400"
-  CONTAINER_NAME: "sayedimac/docker"
+  CONTAINER_NAME: "docker"
   RESOURCE_GROUP: "400"
   CLUSTER_NAME: "jaz400"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
