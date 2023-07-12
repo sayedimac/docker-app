@@ -1,0 +1,25 @@
+name: Container Apps
+
+on:
+  workflow_dispatch:
+
+jobs:
+  buildImage:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.CREDS }}
+
+      - name: Build and deploy Container App
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/src
+          acrName: jaztest.azurecr.io
+          containerAppName: jaztest
+          resourceGroup: test
