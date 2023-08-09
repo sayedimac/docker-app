@@ -7,7 +7,8 @@ on:
 env:
   AZURE_CONTAINER_REGISTRY: "jaz204"
   CONTAINER_NAME: "docker"
-  RESOURCE_GROUP: "204"
+  CRRESOURCE_GROUP: "204"
+  RESOURCE_GROUP: "204aks"  
   CLUSTER_NAME: "jaz204"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
 
@@ -34,7 +35,7 @@ jobs:
       # Builds and pushes an image up to your Azure Container Registry
       - name: Build and push image to ACR
         run: |
-          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.CRRESOURCE_GROUP }} .
 
   deploy:
     permissions:
