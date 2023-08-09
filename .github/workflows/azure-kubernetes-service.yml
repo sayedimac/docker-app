@@ -1,22 +1,14 @@
 name: Build and deploy an app to AKS
 
 on:
-  push:
-    paths:
-      - src/**
-    branches: [ "main" ]
-    # Publish semver tags as releases.
-    tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
 
 
 env:
-  AZURE_CONTAINER_REGISTRY: "jaz400"
+  AZURE_CONTAINER_REGISTRY: "jaz204"
   CONTAINER_NAME: "docker"
-  RESOURCE_GROUP: "400"
-  CLUSTER_NAME: "jaz400"
+  RESOURCE_GROUP: "204aks"
+  CLUSTER_NAME: "jaz204"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
 
 jobs:
