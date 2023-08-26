@@ -9,4 +9,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0 as runtime
 WORKDIR /publish
 COPY --from=build-env /publish .
 EXPOSE 80
-ENTRYPOINT ["dotnet", "docker.dll"]
+ENTRYPOINT ["dotnet", "docker-app.dll"]
