@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: sayedimacdockerapp 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sayedimacdockerapp
+  template:
+    metadata:
+      labels:
+        app: sayedimacdockerapp 
+    spec:
+      containers:
+        - name: sayedimacdockerapp 
+          image: jaz400.azurecr.io/sayedimacdockerapp
+          ports:
+          - containerPort: 80
