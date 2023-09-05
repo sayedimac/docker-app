@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: docker
+  name: docker-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: docker
+      app: docker-app
   template:
     metadata:
       labels:
-        app: docker
+        app: docker-app
     spec:
       nodeSelector:
         "kubernetes.io/os": linux
       containers:
-      - name: docker
+      - name: docker-app
         image: jaz400.azurecr.io/docker-app:latest
         resources:
           requests:
@@ -30,10 +30,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: docker
+  name: docker-app
 spec:
   type: LoadBalancer
   ports:
   - port: 80
   selector:
-    app: docker
+    app: docker-app
