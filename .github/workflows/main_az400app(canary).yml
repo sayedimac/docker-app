@@ -21,11 +21,10 @@ jobs:
           include-prerelease: true
 
       - name: Build with dotnet
-        run: dotnet build --configuration Release
-        working-directory: ./src
+        run: dotnet build --configuration Release ./src
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp ./src
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
