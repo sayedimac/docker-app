@@ -4,5 +4,3 @@ You want to execute this command to create a service principal - this will creat
 
 az ad sp create-for-rbac -n "{ADD YOUR NAME HERE}" --role Contributor --scopes /subscriptions/{subscriptionId} --sdk-auth 
 
-hahaha
-asdasd
