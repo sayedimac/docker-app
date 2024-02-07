@@ -7,6 +7,7 @@ variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: 'docker' # Docker service connection identifier
   envName: 'aks' # name of your environment
+  resourceName: '400'
   imageRepository: 'docker-app-yml' # name of image repository
   containerRegistry: 'jaz400.azurecr.io' # path to container registry
   dockerfilePath: '**/Dockerfile'
