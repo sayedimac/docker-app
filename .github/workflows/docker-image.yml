@@ -21,7 +21,7 @@ jobs:
     - name: Build and deploy Container App
       uses: azure/container-apps-deploy-action@v1
       with:
-        acrName: myregistry
+        acrName: az2003
         containerAppName: aca-az2003
         resourceGroup: AZ-2003
         imageToDeploy: az2003.azurecr.io/docker-app:actions
