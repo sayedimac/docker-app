@@ -22,6 +22,6 @@ jobs:
       uses: azure/container-apps-deploy-action@v1
       with:
         acrName: az2003
-        containerAppName: aca-az2003
+        containerAppName: az2003aca
         resourceGroup: AZ-2003
         imageToDeploy: az2003.azurecr.io/docker-app:latest
