@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag az2003.azurecr.io/docker-app:actions
+      run: docker build . --file Dockerfile --tag az2003.azurecr.io/docker-app:latest
     - name: Log in to Azure
       uses: azure/login@v1
       with:
@@ -24,4 +24,4 @@ jobs:
         acrName: az2003
         containerAppName: aca-az2003
         resourceGroup: AZ-2003
-        imageToDeploy: az2003.azurecr.io/docker-app:actions
+        imageToDeploy: az2003.azurecr.io/docker-app:latest
