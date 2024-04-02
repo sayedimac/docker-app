@@ -7,7 +7,6 @@ on:
 env:
   AZURE_CONTAINER_REGISTRY: "jaz400"
   CONTAINER_NAME: "docker-app"
-  CRRESOURCE_GROUP: "400"
   RESOURCE_GROUP: "400"  
   CLUSTER_NAME: "jaz400"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
@@ -24,18 +23,32 @@ jobs:
 
       # Logs in with your Azure credentials
       - name: Azure login
-        uses: azure/login@v1.4.6
+        uses: azure/login@v2.0.0
         with:
            creds: ${{ secrets.CREDS }}
-#          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      #          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # Create RG
+      - name: Create Resource Group
+        run: |
+          az group create --name ${{ env.RESOURCE_GROUP }} --location "uksouth"
 
-      # Builds and pushes an image up to your Azure Container Registry
+      # Creates ACR
+      - name: Create ACR
+        run: |
+          az acr create -n ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} --sku Standard --admin-enabled true
+              
+      # Creates AKS
+      - name: Create AKS
+        run: |
+          az AKS create -n ${{ env.CLUSTER_NAME }} -g ${{ env.RESOURCE_GROUP }} --tier free --enable-azure-monitor-metrics --attach-acr ${{ env.AZURE_CONTAINER_REGISTRY }} --enable-managed-identity  --generate-ssh-keys
+      
+      # Upload source and build container image in ACR
       - name: Build and push image to ACR
         run: |
-          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.CRRESOURCE_GROUP }} .
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
 
   deploy:
     permissions:
@@ -46,7 +59,7 @@ jobs:
     needs: [buildImage]
     steps:
       # Checks out the repository this file is in
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.2
 
       # Logs in with your Azure credentials
       - name: Azure login
