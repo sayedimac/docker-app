@@ -1,4 +1,4 @@
-name: Build an dPush Container Image to GHCR.IO
+name: Build and Push Image to GHCR.IO
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
