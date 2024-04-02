@@ -35,6 +35,17 @@ jobs:
         run: |
           az group create --name ${{ env.RESOURCE_GROUP }} --location "uksouth"
 
+      # Create ACR (BICEP)
+      - name: Deploy Bicep file
+        uses: azure/arm-deploy@v1
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: ./IaC/main.bicep
+          parameters: 'registryName=${{ env.AZURE_CONTAINER_REGISTRY }}'
+          failOnStdErr: false
+
+
       # Creates ACR
       - name: Create ACR
         run: |
