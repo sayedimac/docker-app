@@ -16,7 +16,7 @@ spec:
         "kubernetes.io/os": linux
       containers:
       - name: docker-app
-        image: jaz400reg.azurecr.io/docker-app:latest
+        image: az1001.azurecr.io/docker-app:latest
         resources:
           requests:
             cpu: 100m

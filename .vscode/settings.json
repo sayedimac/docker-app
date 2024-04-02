@@ -4,5 +4,6 @@
     },
     "omnisharp.dotNetCliPaths": [
         "C:\\Users\\jomyburg\\.azurelogicapps\\dependencies\\DotNetSDK"
-    ]
+    ],
+    "WhiteSource Advise.Diff.BaseBranch": "main"
 }
