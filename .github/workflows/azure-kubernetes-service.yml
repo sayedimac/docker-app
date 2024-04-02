@@ -41,7 +41,7 @@ jobs:
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: IaC/arc.bicep
+          template: IaC/acr.bicep
           parameters: 'registryName=${{ env.AZURE_CONTAINER_REGISTRY }}'
           failOnStdErr: false
 
