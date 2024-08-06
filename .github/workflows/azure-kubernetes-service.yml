@@ -33,7 +33,7 @@ jobs:
       # Create RG
       - name: Create Resource Group
         run: |
-          az group create --name ${{ env.RESOURCE_GROUP }} --location "uksouth"
+          az group create --name ${{ env.RESOURCE_GROUP }} --location "westeu"
 
       # Create ACR (BICEP)
       - name: Deploy Bicep file
