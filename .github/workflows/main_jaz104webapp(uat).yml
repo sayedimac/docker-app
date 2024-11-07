@@ -6,12 +6,20 @@ name: Build and deploy ASP.Net Core app to Azure Web App - jaz104webapp
 on:
   push:
     branches:
-      - main
+    - main
+    paths:
+      - 'src/**'
+  pull_request:
+    paths:
+        - 'src/**'
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
 
     steps:
       - uses: actions/checkout@v4
