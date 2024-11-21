@@ -6,4 +6,8 @@ az ad sp create-for-rbac -n "{ADD YOUR NAME HERE}" --role Contributor --scopes /
 
 
 
+dfghfghdfghfdghfg
+
+
+
 

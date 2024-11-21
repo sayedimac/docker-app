@@ -7,7 +7,7 @@ on:
 env:
   AZURE_CONTAINER_REGISTRY: "jaz400"
   CONTAINER_NAME: "docker-app"
-  RESOURCE_GROUP: "400"  
+  RESOURCE_GROUP: "jaz400"  
   CLUSTER_NAME: "jaz400"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
 
@@ -19,11 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Checks out the repository this file is in
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Logs in with your Azure credentials
       - name: Azure login
-        uses: azure/login@v2.0.0
+        uses: azure/login@v2.1.0
         with:
            creds: ${{ secrets.CREDS }}
       #          client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -33,11 +33,11 @@ jobs:
       # Create RG
       - name: Create Resource Group
         run: |
-          az group create --name ${{ env.RESOURCE_GROUP }} --location "uksouth"
+          az group create --name ${{ env.RESOURCE_GROUP }} --location "westeurope"
 
       # Create ACR (BICEP)
       - name: Deploy Bicep file
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@v2
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
@@ -52,9 +52,9 @@ jobs:
           az acr create -n ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} --sku Standard --admin-enabled true
               
       # Creates AKS
-      - name: Create AKS
-        run: |
-          az AKS create -n ${{ env.CLUSTER_NAME }} -g ${{ env.RESOURCE_GROUP }} --tier free --enable-azure-monitor-metrics --attach-acr ${{ env.AZURE_CONTAINER_REGISTRY }} --enable-managed-identity  --generate-ssh-keys
+      #- name: Create AKS
+      #  run: |
+      #    az AKS create -n ${{ env.CLUSTER_NAME }} -g ${{ env.RESOURCE_GROUP }} --tier standard --enable-azure-monitor-metrics --attach-acr ${{ env.AZURE_CONTAINER_REGISTRY }} --enable-managed-identity  --generate-ssh-keys
       
       # Upload source and build container image in ACR
       - name: Build and push image to ACR
@@ -89,7 +89,7 @@ jobs:
 
       # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
       - name: Get K8s context
-        uses: azure/aks-set-context@v3
+        uses: azure/aks-set-context@v4
         with:
           resource-group: ${{ env.RESOURCE_GROUP }}
           cluster-name: ${{ env.CLUSTER_NAME }}
@@ -98,7 +98,7 @@ jobs:
 
       # Deploys application based on given manifest file
       - name: Deploys application
-        uses: Azure/k8s-deploy@v4
+        uses: Azure/k8s-deploy@v5
         with:
           action: deploy
           manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
