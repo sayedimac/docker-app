@@ -54,7 +54,7 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'jaz104app'
+          app-name: 'slots'
           slot-name: 'uat'
           package: .
-          publish-profile: ${{ secrets.alwayson }}
+          publish-profile: ${{ secrets.ALWAYSONPROFILE }}
