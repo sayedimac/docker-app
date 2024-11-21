@@ -30,3 +30,25 @@ jobs:
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
+      
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'uat'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: .net-app
+      
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'slots'
+          slot-name: 'uat'
+          package: .
+          publish-profile: ${{ secrets.alwayson }}     
