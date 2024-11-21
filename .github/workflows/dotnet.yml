@@ -18,7 +18,7 @@ defaults:
     
 jobs:
   build:
-   if: ${{ github.event.label.name == 'push' }}
+
    runs-on: windows-latest
 
    steps:
@@ -42,7 +42,7 @@ jobs:
         path: ${{env.DOTNET_ROOT}}/myapp
 
   deploy:
-    if: ${{ github.event.label.name == 'push' }}
+
     runs-on: windows-latest
     needs: build
     environment:
