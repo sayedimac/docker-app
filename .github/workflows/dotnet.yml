@@ -5,8 +5,11 @@ name: dotnet
 
 on:
   push:
-    branches:
-      - master
+   paths:
+      - src/**
+  pull_request:
+    types: [ Labeled ]
+    
   workflow_dispatch:
   
 defaults:
@@ -14,8 +17,9 @@ defaults:
     working-directory: src
     
 jobs:
+  if: ${{ github.event.label.name == 'push' }}
   build:
-    runs-on: windows-latest
+   runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
