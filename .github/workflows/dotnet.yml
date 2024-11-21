@@ -8,7 +8,11 @@ on:
     branches:
       - master
   workflow_dispatch:
-
+  
+defaults:
+  run:
+    working-directory: src
+    
 jobs:
   build:
     runs-on: windows-latest
