@@ -4,12 +4,6 @@ param aksClusterName string
 @description('The location of AKS resource.')
 param location string = resourceGroup().location
 
-@allowed([
-  'new'
-  'existing'
-])
-param newOrExisting string = 'new'
-
 @description('Disk size (in GiB) to provision for each of the agent pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that agentVMSize.')
 @minValue(0)
 @maxValue(1023)
@@ -30,7 +24,7 @@ param agentVMSize string = 'Standard_D2s_v3'
 ])
 param osType string = 'Linux'
 
-resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = if (newOrExisting == 'new') {
+resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   location: location
   name: aksClusterName
   tags: {
@@ -54,9 +48,6 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = if
       }
     ]
   }
-}
-resource saExisting 'Microsoft.ContainerService/managedClusters@2024-02-01' existing = if (newOrExisting == 'existing') {
-  name: aksClusterName
 }
 
 output controlPlaneFQDN string = aksCluster.properties.fqdn
