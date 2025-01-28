@@ -53,7 +53,7 @@ jobs:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: IaC/aks.bicep
-          parameters: 'aksClusterName=${{ env.CLUSTER_NAME }} dnsPrefix=${{ env.DNS_PREFIX }}'
+          parameters: 'aksClusterName=${{ env.CLUSTER_NAME }}'
           failOnStdErr: false
 
 
