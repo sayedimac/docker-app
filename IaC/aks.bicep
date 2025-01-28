@@ -35,7 +35,6 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   }
   properties: {
     enableRBAC: false
-    dnsPrefix: 'jaz400'
     agentPoolProfiles: [
       {
         name: 'agentpool'
