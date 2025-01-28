@@ -36,7 +36,7 @@ jobs:
           az group create --name ${{ env.RESOURCE_GROUP }} --location "westeurope"
 
       # Create ACR (BICEP)
-      - name: Deploy Bicep file
+      - name: Deploy ACR using Bicep
         uses: azure/arm-deploy@v2
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -45,11 +45,21 @@ jobs:
           parameters: 'registryName=${{ env.AZURE_CONTAINER_REGISTRY }}'
           failOnStdErr: false
 
+      # Create AKS (BICEP)
+      - name: Deploy AKS using Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/aks.bicep
+          parameters: 'aksClusterName=${{ env.CLUSTER_NAME }}'
+          failOnStdErr: false
+
 
       # Creates ACR
-      - name: Create ACR
-        run: |
-          az acr create -n ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} --sku Standard --admin-enabled true
+      # - name: Create ACR
+      #  run: |
+      #    az acr create -n ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} --sku Standard --admin-enabled true
               
       # Creates AKS
       #- name: Create AKS
