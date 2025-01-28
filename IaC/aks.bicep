@@ -1,11 +1,8 @@
 @description('The name of the Managed Cluster resource.')
-param aksClusterName string = 'aks101cluster-vmss'
+param aksClusterName string
 
 @description('The location of AKS resource.')
 param location string = resourceGroup().location
-
-@description('Optional DNS prefix to use with hosted Kubernetes API server FQDN.')
-param dnsPrefix string
 
 @description('Disk size (in GiB) to provision for each of the agent pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that agentVMSize.')
 @minValue(0)
@@ -37,7 +34,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    enableRBAC: true
+    enableRBAC: false
     dnsPrefix: dnsPrefix
     agentPoolProfiles: [
       {
