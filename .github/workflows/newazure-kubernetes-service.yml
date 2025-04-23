@@ -47,6 +47,7 @@ jobs:
       contents: read
       id-token: write
     runs-on: ubuntu-latest
+    environment: production
     steps:
       # Checks out the repository this file is in
       - uses: actions/checkout@v4
@@ -97,6 +98,7 @@ jobs:
       contents: read
       id-token: write
     runs-on: ubuntu-latest
+    environment: production
     needs: [buildImage]
     steps:
       # Checks out the repository this file is in
