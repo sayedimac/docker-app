@@ -1,6 +1,9 @@
 @description('The name of the Managed Cluster resource.')
 param aksClusterName string
 
+@description('DNS prefix for the Kubernetes cluster.')
+param dnsPrefix string = aksClusterName
+
 @description('The location of AKS resource.')
 param location string = resourceGroup().location
 
@@ -35,6 +38,7 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
   }
   properties: {
     enableRBAC: false
+    dnsPrefix: dnsPrefix
     agentPoolProfiles: [
       {
         name: 'agentpool'
