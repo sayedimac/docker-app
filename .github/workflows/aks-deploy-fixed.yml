@@ -26,7 +26,7 @@ jobs:
 
       # Logs in with your Azure credentials
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -39,7 +39,7 @@ jobs:
 
       # Deploy ACR using Bicep
       - name: Deploy ACR using Bicep
-        uses: azure/arm-deploy@v2
+        uses: azure/arm-deploy@v1
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
@@ -49,13 +49,15 @@ jobs:
 
       # Deploy AKS using Bicep
       - name: Deploy AKS using Bicep
-        uses: azure/arm-deploy@v2
+        uses: azure/arm-deploy@v1
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
           template: IaC/aks.bicep
           parameters: "aksClusterName=${{ env.CLUSTER_NAME }}"
-          failOnStdErr: false # Attach ACR to AKS
+          failOnStdErr: false
+
+      # Attach ACR to AKS
       - name: Attach ACR to AKS
         run: |
           az aks update -n ${{ env.CLUSTER_NAME }} -g ${{ env.RESOURCE_GROUP }} --attach-acr ${{ env.AZURE_CONTAINER_REGISTRY }}
@@ -91,7 +93,7 @@ jobs:
 
       # Logs in with your Azure credentials
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -100,17 +102,20 @@ jobs:
       # Build and push image to ACR
       - name: Build and push image to ACR
         run: |
-          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }} --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .      # Fix deployment manifest with correct image reference
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }} --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
+
+      # Fix deployment manifest with correct image reference
       - name: Update deployment manifest
         run: |
           sed -i 's|az104acr.azurecr.io/docker-app:latest|${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}|g' ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+          echo "Updated deployment manifest:"
           cat ${{ env.DEPLOYMENT_MANIFEST_PATH }}
 
       # Set up kubelogin for non-interactive login
       - name: Set up kubelogin for non-interactive login
-        uses: azure/use-kubelogin@v1
+        uses: azure/use-kubelogin@v1.1
         with:
-          kubelogin-version: "v0.0.25"
+          kubelogin-version: "v0.0.26"
 
       # Get K8s context
       - name: Get K8s context
@@ -121,9 +126,40 @@ jobs:
           admin: "false"
           use-kubelogin: "true"
 
+      # Verify connection to ACR from AKS
+      - name: Verify ACR connectivity
+        run: |
+          # Create a simple pod that tries to pull from ACR to verify connectivity
+          cat <<EOF > acr-test.yaml
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: acr-test
+          spec:
+            containers:
+            - name: acr-test
+              image: ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+              imagePullPolicy: Always
+            restartPolicy: Never
+          EOF
+
+          # Apply the test pod
+          kubectl apply -f acr-test.yaml
+
+          # Wait for the pod to be created
+          echo "Waiting for test pod to start (this helps verify ACR connectivity)..."
+          kubectl wait --for=condition=ready pod/acr-test --timeout=60s || true
+
+          # Show pod status
+          kubectl get pod acr-test -o wide
+          kubectl describe pod acr-test
+
+          # Clean up the test pod
+          kubectl delete pod acr-test --force --grace-period=0 || true
+
       # Deploy application
       - name: Deploy application to AKS
-        uses: Azure/k8s-deploy@v4
+        uses: Azure/k8s-deploy@v4.10
         with:
           action: deploy
           manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
