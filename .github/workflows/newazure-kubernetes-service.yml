@@ -35,8 +35,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_CONTAINER_REGISTRY: "alwaysacr.azurecr.io"
-  CONTAINER_NAME: "docker-400"
+  AZURE_CONTAINER_REGISTRY: "jaz400acr.azurecr.io"
+  CONTAINER_NAME: "docker-app"
   RESOURCE_GROUP: "az400"
   CLUSTER_NAME: "az400"
   DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
@@ -55,9 +55,9 @@ jobs:
       - name: Azure login
         uses: azure/login@v1.4.6
         with:
-          client-id: d3cf0ec2-316a-4d29-bfe8-a7bbb7558a5e
-          tenant-id: 4473b288-e49a-4904-bb61-9c6bafc0a04f
-          subscription-id: d54c8473-b179-448c-9868-08cd5f0a941c
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_CLIENT_ID }}
+          subscription-id: ${{ secrets.AZURE_CLIENT_ID }}
 
       # Builds and pushes an image up to your Azure Container Registry
       - name: Build and push image to ACR
