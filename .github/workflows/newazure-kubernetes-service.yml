@@ -61,12 +61,6 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           enable-AzPSSession: true
 
-
-      # Create Resource Group
-      - name: Create Resource Group
-        run: |
-          az group create --name ${{ env.RESOURCE_GROUP }} --location "westeurope"
-
       # Deploy ACR using Bicep
       - name: Deploy ACR using Bicep
         uses: azure/arm-deploy@v2
