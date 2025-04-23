@@ -1,0 +1,116 @@
+name: Build and deploy to AKS
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: "dockerappacr"
+  CONTAINER_NAME: "docker-app"
+  RESOURCE_GROUP: "docker-app-rg"
+  CLUSTER_NAME: "docker-app-aks"
+  DEPLOYMENT_MANIFEST_PATH: "deployment.yml"
+  LOCATION: "westeurope"
+
+jobs:
+  deploy_infrastructure:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v4
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Create Resource Group
+      - name: Create Resource Group
+        run: |
+          az group create --name ${{ env.RESOURCE_GROUP }} --location "${{ env.LOCATION }}"
+
+      # Deploy ACR using Bicep
+      - name: Deploy ACR using Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/acr.bicep
+          parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
+          failOnStdErr: false
+
+      # Deploy AKS using Bicep
+      - name: Deploy AKS using Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/aks.bicep
+          parameters: "aksClusterName=${{ env.CLUSTER_NAME }}"
+          failOnStdErr: false
+
+      # Attach ACR to AKS
+      - name: Attach ACR to AKS
+        run: |
+          az aks update -n ${{ env.CLUSTER_NAME }} -g ${{ env.RESOURCE_GROUP }} --attach-acr ${{ env.AZURE_CONTAINER_REGISTRY }}
+
+  build_and_deploy:
+    needs: deploy_infrastructure
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v4
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Build and push image to ACR
+      - name: Build and push image to ACR
+        run: |
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }} --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
+
+      # Fix deployment manifest with correct image reference
+      - name: Update deployment manifest
+        run: |
+          sed -i 's|az104acr.azurecr.io/docker-app:latest|${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}|g' ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+
+      # Set up kubelogin for non-interactive login
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: "v0.0.25"
+
+      # Get K8s context
+      - name: Get K8s context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+          admin: "false"
+          use-kubelogin: "true"
+
+      # Deploy application
+      - name: Deploy application to AKS
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ env.DEPLOYMENT_MANIFEST_PATH }}
+          images: |
+            ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }}
