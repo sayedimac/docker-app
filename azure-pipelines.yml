@@ -15,7 +15,7 @@ variables:
   imageRepository: 'dockerado'
   containerRegistry: 'jaz400acr.azurecr.io'
   dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
+  tag: latest
   imagePullSecret: 'jaz400acreb9b-auth'
 
   # Agent VM image name
@@ -70,8 +70,7 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                $(Pipeline.Workspace)/manifests/deployment.yml
-                $(Pipeline.Workspace)/manifests/service.yml
+                $(Pipeline.Workspace)/deployment.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
