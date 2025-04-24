@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: dockerado 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dockerado
+  template:
+    metadata:
+      labels:
+        app: dockerado 
+    spec:
+      containers:
+        - name: dockerado 
+          image: jaz400acr.azurecr.io/dockerado
+          ports:
+          - containerPort: 80
