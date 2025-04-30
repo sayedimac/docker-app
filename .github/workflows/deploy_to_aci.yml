@@ -38,7 +38,7 @@ jobs:
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: azd/modules/acr.bicep
+          template: azd/aci/modules/acr.bicep
           parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
           failOnStdErr: false
 

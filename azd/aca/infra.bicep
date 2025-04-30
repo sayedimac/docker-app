@@ -18,14 +18,13 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-module containerRegistry '../acr/modules/acr.bicep' = {
+module containerRegistry 'modules/container-registry.bicep' = {
   name: 'registry'
   scope: resourceGroup
   params: {
     location: location
-    registryName: 'acr${resourceToken}'
-    sku: 'Basic'
-    addAdminUser: true
+    tags: tags
+    name: 'acr${resourceToken}'
   }
 }
 
@@ -36,13 +35,13 @@ module containerInstance 'modules/container-instance.bicep' = {
     location: location
     tags: tags
     name: 'aci-${resourceToken}'
-    containerImage: '${containerRegistry.outputs.acrLoginServer}/docker-app:latest'
+    containerImage: '${containerRegistry.outputs.loginServer}/docker-app:latest'
     containerPort: 80
     cpuCores: '1.0'
     memoryInGb: '1.5'
-    registryLoginServer: containerRegistry.outputs.acrLoginServer
-    registryUsername: containerRegistry.outputs.acrName
-    registryPassword: containerRegistry.outputs.acrPassword
+    registryLoginServer: containerRegistry.outputs.loginServer
+    registryUsername: containerRegistry.outputs.adminUsername
+    registryPassword: containerRegistry.outputs.adminPassword
   }
 }
 

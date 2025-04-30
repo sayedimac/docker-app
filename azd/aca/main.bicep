@@ -9,6 +9,18 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+@description('The container image to deploy')
+param containerImage string = ''
+
+@description('Port the container listens on')
+param containerPort int = 80
+
+@description('CPU cores allocated to the container instance')
+param cpuCores string = '1.0'
+
+@description('Memory allocated to the container instance in GB')
+param memoryInGb string = '1.5'
+
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 
@@ -18,7 +30,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-module containerRegistry '../acr/modules/acr.bicep' = {
+module containerRegistry './modules/acr.bicep' = {
   name: 'registry'
   scope: resourceGroup
   params: {
@@ -29,20 +41,20 @@ module containerRegistry '../acr/modules/acr.bicep' = {
   }
 }
 
-module containerInstance 'modules/container-instance.bicep' = {
+module containerInstance './modules/container-instance.bicep' = {
   name: 'container-instance'
   scope: resourceGroup
   params: {
     location: location
     tags: tags
     name: 'aci-${resourceToken}'
-    containerImage: '${containerRegistry.outputs.acrLoginServer}/docker-app:latest'
-    containerPort: 80
-    cpuCores: '1.0'
-    memoryInGb: '1.5'
-    registryLoginServer: containerRegistry.outputs.acrLoginServer
-    registryUsername: containerRegistry.outputs.acrName
-    registryPassword: containerRegistry.outputs.acrPassword
+    containerImage: !empty(containerImage) ? containerImage : 'mcr.microsoft.com/azuredocs/aci-helloworld'
+    containerPort: containerPort
+    cpuCores: cpuCores
+    memoryInGb: memoryInGb
+    registryLoginServer: containerRegistry.outputs.loginServer
+    registryUsername: containerRegistry.outputs.adminUsername
+    registryPassword: containerRegistry.outputs.adminPassword
   }
 }
 

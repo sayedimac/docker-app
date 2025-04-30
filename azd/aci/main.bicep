@@ -30,7 +30,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-module containerRegistry './modules/acr.bicep' = {
+module containerRegistry '../acr/modules/acr.bicep' = {
   name: 'registry'
   scope: resourceGroup
   params: {
