@@ -4,8 +4,6 @@
 name: Deploy to ACI
 
 on:
-  push:
-    branches: ["aci-deploy"]
   workflow_dispatch:
 
 env:
@@ -40,7 +38,7 @@ jobs:
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: IaC/acr.bicep
+          template: azd/modules/acr.bicep
           parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
           failOnStdErr: false
 
