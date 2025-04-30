@@ -1,0 +1,74 @@
+# This workflow will build and deploy an application to Azure Container Apps (ACA)
+# It uses the same container registry as the AKS deployment workflow
+
+name: Deploy to ACA
+
+on:
+  push:
+    branches: ["aca-deploy"]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: "jaz400acr"
+  CONTAINER_NAME: "docker-app"
+  RESOURCE_GROUP: "az400"
+  ACA_NAME: "docker-app-aca"
+
+jobs:
+  buildAndDeploy:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v4
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      # Deploy ACR using Bicep if it doesn't exist
+      - name: Deploy ACR using Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/acr.bicep
+          parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
+          failOnStdErr: false
+
+      # Builds and pushes an image up to your Azure Container Registry
+      - name: Build and push image to ACR
+        run: |
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
+
+      # Deploy to Azure Container Apps using Bicep
+      - name: Deploy to Azure Container Apps
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/aca.bicep
+          parameters: >
+            containerAppName=${{ env.ACA_NAME }}
+            acrName=${{ env.AZURE_CONTAINER_REGISTRY }}
+            imageName=${{ env.CONTAINER_NAME }}
+          failOnStdErr: false
+
+      # Get Container App URL for output
+      - name: Get Container App URL
+        id: get-aca-url
+        run: |
+          ACA_URL=$(az containerapp show --name ${{ env.ACA_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query properties.configuration.ingress.fqdn -o tsv)
+          echo "Container App is accessible at: https://$ACA_URL"
+          echo "ACA_URL=$ACA_URL" >> $GITHUB_OUTPUT
+
+      - name: Output deployment URL
+        run: echo "Application deployed to https://${{ steps.get-aca-url.outputs.ACA_URL }}"

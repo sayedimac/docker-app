@@ -2,6 +2,7 @@
 param registryName string
 param location string = resourceGroup().location
 param sku string = 'Basic'
+param addAdminUser bool = true
 
 resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
   name: registryName
@@ -10,7 +11,7 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
     name: sku
   }
   properties: {
-    adminUserEnabled: true
+    adminUserEnabled: addAdminUser
   }
 }
 

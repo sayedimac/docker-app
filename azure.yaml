@@ -1,0 +1,8 @@
+name: docker-app
+services:
+  api:
+    project: .
+    language: dotnet
+    host: containerapp
+    docker:
+      path: ./Dockerfile

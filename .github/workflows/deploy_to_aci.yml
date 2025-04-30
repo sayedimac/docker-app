@@ -1,0 +1,74 @@
+# This workflow will build and deploy an application to Azure Container Instances (ACI)
+# It uses the same container registry as the AKS deployment workflow
+
+name: Deploy to ACI
+
+on:
+  push:
+    branches: ["aci-deploy"]
+  workflow_dispatch:
+
+env:
+  AZURE_CONTAINER_REGISTRY: "jaz400acr"
+  CONTAINER_NAME: "docker-app"
+  RESOURCE_GROUP: "az400"
+  ACI_NAME: "docker-app-aci"
+
+jobs:
+  buildAndDeploy:
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v4
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+
+      # Deploy ACR using Bicep if it doesn't exist
+      - name: Deploy ACR using Bicep
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/acr.bicep
+          parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
+          failOnStdErr: false
+
+      # Builds and pushes an image up to your Azure Container Registry
+      - name: Build and push image to ACR
+        run: |
+          az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
+
+      # Deploy to ACI using Bicep
+      - name: Deploy to Azure Container Instances
+        uses: azure/arm-deploy@v2
+        with:
+          subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          resourceGroupName: ${{ env.RESOURCE_GROUP }}
+          template: IaC/aci.bicep
+          parameters: >
+            containerInstanceName=${{ env.ACI_NAME }}
+            acrName=${{ env.AZURE_CONTAINER_REGISTRY }}
+            imageName=${{ env.CONTAINER_NAME }}
+          failOnStdErr: false
+
+      # Get ACI IP address for output
+      - name: Get ACI IP Address
+        id: get-aci-ip
+        run: |
+          IP_ADDRESS=$(az container show --name ${{ env.ACI_NAME }} --resource-group ${{ env.RESOURCE_GROUP }} --query ipAddress.ip -o tsv)
+          echo "Container is accessible at: http://$IP_ADDRESS"
+          echo "ACI_IP=$IP_ADDRESS" >> $GITHUB_OUTPUT
+
+      - name: Output deployment URL
+        run: echo "Application deployed to http://${{ steps.get-aci-ip.outputs.ACI_IP }}"
