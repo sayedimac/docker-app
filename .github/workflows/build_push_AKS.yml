@@ -43,6 +43,7 @@ env:
 
 jobs:
   buildImage:
+    name: Build and Push Image
     permissions:
       contents: read
       id-token: write
@@ -90,6 +91,7 @@ jobs:
           az acr build --image ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:latest --registry ${{ env.AZURE_CONTAINER_REGISTRY }} -g ${{ env.RESOURCE_GROUP }} .
 
   deploy:
+    name: Deploy to AKS
     permissions:
       actions: read
       contents: read
