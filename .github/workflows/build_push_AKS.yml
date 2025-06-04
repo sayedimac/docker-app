@@ -30,8 +30,6 @@
 name: New AKS Deploy
 
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
 
 env:
