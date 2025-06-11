@@ -8,7 +8,7 @@ name: Build and Push Image to GHCR.IO
 
 
 on:
-  workflow_dispatch:
+
 
 env:
   # Use docker.io for Docker Hub if empty
