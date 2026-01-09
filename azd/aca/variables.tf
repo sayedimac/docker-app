@@ -32,12 +32,12 @@ variable "container_port" {
 
 variable "cpu_cores" {
   type        = string
-  description = "CPU cores allocated to the container"
+  description = "CPU cores allocated to the container (e.g., '0.5', '1.0')"
   default     = "0.5"
 }
 
 variable "memory_in_gb" {
   type        = string
-  description = "Memory allocated to the container in GB"
+  description = "Memory allocated to the container (e.g., '1Gi', '2Gi')"
   default     = "1Gi"
 }

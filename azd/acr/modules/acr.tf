@@ -30,13 +30,11 @@ variable "registry_name" {
 variable "location" {
   type        = string
   description = "Azure region location"
-  default     = null
 }
 
 variable "resource_group_name" {
   type        = string
   description = "Name of the resource group"
-  default     = null
 }
 
 variable "sku" {

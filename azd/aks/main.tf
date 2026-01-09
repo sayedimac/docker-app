@@ -43,6 +43,7 @@ resource "azurerm_container_registry" "acr" {
 }
 
 # AKS Cluster
+# Note: RBAC is disabled to match the Bicep configuration, but enabling RBAC is recommended for production
 resource "azurerm_kubernetes_cluster" "aks" {
   name                              = "aks-${random_string.resource_token.result}"
   location                          = azurerm_resource_group.main.location
