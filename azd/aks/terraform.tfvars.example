@@ -1,0 +1,11 @@
+# Example Terraform variables for Azure Kubernetes Service deployment
+# Copy this file to terraform.tfvars and customize the values
+
+environment_name = "dev"
+location         = "eastus"
+
+# Optional: AKS configuration
+# agent_count      = 3
+# agent_vm_size    = "Standard_D2s_v3"
+# os_disk_size_gb  = 0
+# os_type          = "Linux"

@@ -1,0 +1,11 @@
+# Example Terraform variables for Azure Container Instance deployment
+# Copy this file to terraform.tfvars and customize the values
+
+environment_name = "dev"
+location         = "eastus"
+
+# Optional: Container configuration
+# container_image  = "mcr.microsoft.com/azuredocs/aci-helloworld"
+# container_port   = 80
+# cpu_cores        = "1.0"
+# memory_in_gb     = "1.5"
