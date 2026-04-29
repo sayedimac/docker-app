@@ -13,7 +13,7 @@ param location string
 param containerImage string = ''
 
 @description('Port the container listens on')
-param containerPort int = 80
+param containerPort int = 8080
 
 @description('CPU cores allocated to the container instance')
 param cpuCores string = '1.0'

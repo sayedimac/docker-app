@@ -16,7 +16,7 @@ spec:
         - name: dockerado 
           image: jaz400acr.azurecr.io/dockerado
           ports:
-          - containerPort: 80
+          - containerPort: 8080
           resources:
             requests:
               cpu: 100m

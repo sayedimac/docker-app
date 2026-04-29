@@ -9,20 +9,16 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-@description('The container image to deploy')
-param containerImage string = ''
+@description('The container image name to deploy')
+param imageName string = 'docker-app'
 
 @description('Port the container listens on')
-param containerPort int = 80
-
-@description('CPU cores allocated to the container instance')
-param cpuCores string = '1.0'
-
-@description('Memory allocated to the container instance in GB')
-param memoryInGb string = '1.5'
+param containerPort int = 8080
 
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
+var containerAppName = 'aca-${resourceToken}'
+var registryName = 'acr${resourceToken}'
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${environmentName}'
@@ -35,30 +31,25 @@ module containerRegistry './modules/acr.bicep' = {
   scope: resourceGroup
   params: {
     location: location
-    registryName: 'acr${resourceToken}'
+    registryName: registryName
     sku: 'Basic'
     addAdminUser: true
   }
 }
 
-module containerInstance './modules/container-instance.bicep' = {
-  name: 'container-instance'
+module containerApp './modules/aca.bicep' = {
+  name: 'container-app'
   scope: resourceGroup
   params: {
     location: location
-    tags: tags
-    name: 'aci-${resourceToken}'
-    containerImage: !empty(containerImage) ? containerImage : 'mcr.microsoft.com/azuredocs/aci-helloworld'
+    containerAppName: containerAppName
+    acrName: containerRegistry.outputs.name
+    imageName: imageName
     containerPort: containerPort
-    cpuCores: cpuCores
-    memoryInGb: memoryInGb
-    registryLoginServer: containerRegistry.outputs.loginServer
-    registryUsername: containerRegistry.outputs.adminUsername
-    registryPassword: containerRegistry.outputs.adminPassword
   }
 }
 
 output AZURE_LOCATION string = location
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.loginServer
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
-output ACI_URI string = containerInstance.outputs.uri
+output ACA_URL string = containerApp.outputs.containerAppUrl
