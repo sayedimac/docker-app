@@ -38,7 +38,7 @@ jobs:
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: azd/aci/modules/acr.bicep
+          template: azd/acr/modules/acr.bicep
           parameters: "registryName=${{ env.AZURE_CONTAINER_REGISTRY }}"
           failOnStdErr: false
 
@@ -53,11 +53,12 @@ jobs:
         with:
           subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{ env.RESOURCE_GROUP }}
-          template: IaC/aci.bicep
+          template: azd/aci/modules/aci.bicep
           parameters: >
             containerInstanceName=${{ env.ACI_NAME }}
             acrName=${{ env.AZURE_CONTAINER_REGISTRY }}
             imageName=${{ env.CONTAINER_NAME }}
+            containerPort=8080
           failOnStdErr: false
 
       # Get ACI IP address for output

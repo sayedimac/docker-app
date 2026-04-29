@@ -37,16 +37,16 @@ module containerInstance 'modules/container-instance.bicep' = {
     tags: tags
     name: 'aci-${resourceToken}'
     containerImage: '${containerRegistry.outputs.acrLoginServer}/docker-app:latest'
-    containerPort: 80
+    containerPort: 8080
     cpuCores: '1.0'
     memoryInGb: '1.5'
     registryLoginServer: containerRegistry.outputs.acrLoginServer
-    registryUsername: containerRegistry.outputs.acrName
-    registryPassword: containerRegistry.outputs.acrPassword
+    registryUsername: containerRegistry.outputs.adminUsername
+    registryPassword: containerRegistry.outputs.adminPassword
   }
 }
 
 output AZURE_LOCATION string = location
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.loginServer
-output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.acrLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.acrName
 output ACI_URI string = containerInstance.outputs.uri
