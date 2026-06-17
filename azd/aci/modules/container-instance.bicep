@@ -12,7 +12,7 @@ param registryUsername string
 param registryPassword string
 param environmentVariables array = []
 
-resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2021-10-01' = {
+resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: name
   location: location
   tags: tags

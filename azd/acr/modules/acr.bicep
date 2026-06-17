@@ -4,7 +4,7 @@ param location string = resourceGroup().location
 param sku string = 'Basic'
 param addAdminUser bool = true
 
-resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   name: registryName
   location: location
   sku: {
@@ -15,7 +15,12 @@ resource acr 'Microsoft.ContainerRegistry/registries@2021-06-01-preview' = {
   }
 }
 
-// Outputs for linking to AKS
+// Outputs for linking to AKS and other services
 output acrId string = acr.id
 output acrName string = acr.name
 output acrLoginServer string = acr.properties.loginServer
+// Alias outputs used by ACI/ACA modules
+output name string = acr.name
+output loginServer string = acr.properties.loginServer
+output adminUsername string = acr.listCredentials().username
+output adminPassword string = acr.listCredentials().passwords[0].value

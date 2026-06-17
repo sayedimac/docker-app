@@ -9,20 +9,12 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
-@description('The container image to deploy')
-param containerImage string = ''
-
-@description('Port the container listens on')
-param containerPort int = 80
-
-@description('CPU cores allocated to the container instance')
-param cpuCores string = '1.0'
-
-@description('Memory allocated to the container instance in GB')
-param memoryInGb string = '1.5'
+@description('Name of the AKS cluster')
+param aksClusterName string = 'aks-${environmentName}'
 
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
+var registryName = 'acr${resourceToken}'
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${environmentName}'
@@ -30,35 +22,28 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-module containerRegistry './modules/acr.bicep' = {
+module containerRegistry '../acr/modules/acr.bicep' = {
   name: 'registry'
   scope: resourceGroup
   params: {
     location: location
-    registryName: 'acr${resourceToken}'
+    registryName: registryName
     sku: 'Basic'
     addAdminUser: true
   }
 }
 
-module containerInstance './modules/container-instance.bicep' = {
-  name: 'container-instance'
+module aksCluster './modules/aks.bicep' = {
+  name: 'aks-cluster'
   scope: resourceGroup
   params: {
     location: location
-    tags: tags
-    name: 'aci-${resourceToken}'
-    containerImage: !empty(containerImage) ? containerImage : 'mcr.microsoft.com/azuredocs/aci-helloworld'
-    containerPort: containerPort
-    cpuCores: cpuCores
-    memoryInGb: memoryInGb
-    registryLoginServer: containerRegistry.outputs.loginServer
-    registryUsername: containerRegistry.outputs.adminUsername
-    registryPassword: containerRegistry.outputs.adminPassword
+    aksClusterName: aksClusterName
+    acrResourceId: containerRegistry.outputs.acrId
   }
 }
 
 output AZURE_LOCATION string = location
-output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.loginServer
-output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
-output ACI_URI string = containerInstance.outputs.uri
+output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.acrLoginServer
+output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.acrName
+output AKS_CONTROL_PLANE_FQDN string = aksCluster.outputs.controlPlaneFQDN

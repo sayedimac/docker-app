@@ -9,8 +9,16 @@ param environmentName string
 @description('Primary location for all resources')
 param location string
 
+@description('The container image name to deploy')
+param imageName string = 'docker-app'
+
+@description('Port the container listens on')
+param containerPort int = 8080
+
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
+var containerAppName = 'aca-${resourceToken}'
+var registryName = 'acr${resourceToken}'
 
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: 'rg-${environmentName}'
@@ -18,34 +26,30 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   tags: tags
 }
 
-module containerRegistry 'modules/container-registry.bicep' = {
+module containerRegistry 'modules/acr.bicep' = {
   name: 'registry'
   scope: resourceGroup
   params: {
     location: location
-    tags: tags
-    name: 'acr${resourceToken}'
+    registryName: registryName
+    sku: 'Basic'
+    addAdminUser: true
   }
 }
 
-module containerInstance 'modules/container-instance.bicep' = {
-  name: 'container-instance'
+module containerApp 'modules/aca.bicep' = {
+  name: 'container-app'
   scope: resourceGroup
   params: {
     location: location
-    tags: tags
-    name: 'aci-${resourceToken}'
-    containerImage: '${containerRegistry.outputs.loginServer}/docker-app:latest'
-    containerPort: 80
-    cpuCores: '1.0'
-    memoryInGb: '1.5'
-    registryLoginServer: containerRegistry.outputs.loginServer
-    registryUsername: containerRegistry.outputs.adminUsername
-    registryPassword: containerRegistry.outputs.adminPassword
+    containerAppName: containerAppName
+    acrName: containerRegistry.outputs.name
+    imageName: imageName
+    containerPort: containerPort
   }
 }
 
 output AZURE_LOCATION string = location
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = containerRegistry.outputs.loginServer
 output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.outputs.name
-output ACI_URI string = containerInstance.outputs.uri
+output ACA_URL string = containerApp.outputs.containerAppUrl
