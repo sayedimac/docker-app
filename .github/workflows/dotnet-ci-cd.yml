@@ -1,0 +1,97 @@
+name: .NET CI/CD
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  APP_SERVICE_NAME: "replace-with-app-service-name"
+  RESOURCE_GROUP: "replace-with-resource-group"
+  UAT_SLOT_NAME: "uat"
+  PRODUCTION_SLOT_NAME: "production"
+  ARTIFACT_NAME: "webapp-publish"
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore docker-app.sln
+
+      - name: Build
+        run: dotnet build docker-app.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test docker-app.sln --configuration Release --no-build --no-restore
+
+      - name: Publish
+        run: dotnet publish src/docker-app.csproj --configuration Release --no-restore --output ./publish
+
+      - name: Create deployment package
+        run: |
+          cd publish
+          zip -r ../webapp.zip .
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./webapp.zip
+          if-no-files-found: error
+
+  deploy_uat:
+    if: github.event_name != 'pull_request'
+    needs: build_and_test
+    runs-on: ubuntu-latest
+    environment: uat
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download publish artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: .
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to UAT slot
+        run: az webapp deploy --resource-group "${{ env.RESOURCE_GROUP }}" --name "${{ env.APP_SERVICE_NAME }}" --slot "${{ env.UAT_SLOT_NAME }}" --type zip --src-path ./webapp.zip
+
+  deploy_prod:
+    if: github.event_name != 'pull_request'
+    needs: deploy_uat
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Swap slots to production
+        run: az webapp deployment slot swap --resource-group "${{ env.RESOURCE_GROUP }}" --name "${{ env.APP_SERVICE_NAME }}" --slot "${{ env.UAT_SLOT_NAME }}" --target-slot "${{ env.PRODUCTION_SLOT_NAME }}"
