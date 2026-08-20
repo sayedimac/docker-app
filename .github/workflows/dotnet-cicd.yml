@@ -1,0 +1,97 @@
+name: .NET CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  APP_SERVICE_NAME: jaz204grid
+  APP_SERVICE_RESOURCE_GROUP: az400
+  AZURE_CONTAINER_REGISTRY: jaz400acr
+  IMAGE_NAME: docker-app
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore docker-app.sln
+
+      - name: Build
+        run: dotnet build docker-app.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test docker-app.sln --configuration Release --no-build
+
+  deploy-uat:
+    name: Deploy to UAT
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: uat
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push image
+        run: |
+          az acr build \
+            --registry "$AZURE_CONTAINER_REGISTRY" \
+            --image "$IMAGE_NAME:${GITHUB_SHA}" \
+            --file Dockerfile .
+
+      - name: Deploy image to UAT slot
+        run: |
+          az webapp config container set \
+            --name "$APP_SERVICE_NAME" \
+            --resource-group "$APP_SERVICE_RESOURCE_GROUP" \
+            --slot uat \
+            --docker-custom-image-name "$AZURE_CONTAINER_REGISTRY.azurecr.io/$IMAGE_NAME:${GITHUB_SHA}" \
+            --docker-registry-server-url "https://$AZURE_CONTAINER_REGISTRY.azurecr.io"
+
+  deploy-prod:
+    name: Promote UAT to production
+    if: github.event_name != 'pull_request'
+    needs: deploy-uat
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Swap UAT and production slots
+        run: |
+          az webapp deployment slot swap \
+            --name "$APP_SERVICE_NAME" \
+            --resource-group "$APP_SERVICE_RESOURCE_GROUP" \
+            --slot uat \
+            --target-slot production
