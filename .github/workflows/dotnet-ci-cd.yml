@@ -9,8 +9,8 @@ on:
 
 env:
   DOTNET_VERSION: "10.0.x"
-  APP_SERVICE_NAME: "replace-with-app-service-name"
-  RESOURCE_GROUP: "replace-with-resource-group"
+  APP_SERVICE_NAME: ${{ vars.APP_SERVICE_NAME }}
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
   UAT_SLOT_NAME: "uat"
   PRODUCTION_SLOT_NAME: "production"
   ARTIFACT_NAME: "webapp-publish"
@@ -38,7 +38,7 @@ jobs:
         run: dotnet test docker-app.sln --configuration Release --no-build --no-restore
 
       - name: Publish
-        run: dotnet publish src/docker-app.csproj --configuration Release --no-restore --output ./publish
+        run: dotnet publish src/docker-app.csproj --configuration Release --no-restore --no-build --output ./publish
 
       - name: Create deployment package
         run: |
